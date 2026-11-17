@@ -1,0 +1,15 @@
+{
+  "name": "lanternvale-slopes",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A voxel snowboarding game: one small mountain with kickers, rails, rollers and banked bends.",
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/serve.mjs",
+    "build": "node tools/build.mjs",
+    "test": "node test/sim.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.21.5"
+  }
+}
