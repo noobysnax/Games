@@ -30,12 +30,14 @@ Start at whatever stage the user is at, but look one stage back: a weak hook is 
 
 ## Before you start
 
-Find out, or assume and state: the topic, who it is for, long-form or short-form, target platform and rough length, and what already exists (footage, script, a published video with analytics). Don't interrogate the user; if something is missing, pick a sensible assumption, say what you assumed, and keep going.
+Find out, or assume and state: the topic, who it is for, long-form or short-form, target platform and rough length, whether the creator appears on camera or narrates over footage, and what already exists (footage, script, a published video with analytics). Don't interrogate the user; if something is missing, pick a sensible assumption, say what you assumed, and keep going.
+
+**Assume choices, never facts.** Format, length and audience are fair to assume. The creator's own story is not: how long something took, what went wrong, how many attempts, what result they got, what they felt. A hook built on an invented number is a false promise the moment it's published. Where the script needs one of these, write a bracketed placeholder (`[N weekends]`, `[the bug that cost you a day]`) and collect the placeholders in a short list of things the user needs to supply. If project files are available, read them for real details before reaching for a placeholder.
 
 Read the reference files as needed:
 
 - `references/psychology.md` — why each technique works, how strong the evidence is, and which popular claims are false. Read before explaining *why* to the user or when they push back on a recommendation.
-- `references/practitioner-playbook.md` — attributed methods from named creators and strategists, with their disagreements. Read when the user wants examples, or names a creator's style.
+- `references/practitioner-playbook.md` — attributed methods from named creators and strategists, with their disagreements, plus a section on gaming and devlog videos. Read when the user wants examples, names a creator's style, or is making a gameplay or devlog video.
 - `references/short-form-and-clips.md` — writing Shorts/TikToks/Reels and cutting clips from a long video. Read for any short-form or clipping task.
 
 ## Stage 1 — Idea
@@ -44,7 +46,7 @@ Generate many, keep few. Aim for 20+ candidate ideas, filter to a handful, devel
 
 - **Would the intended viewer click this with no context?** Compare the same effort with a different premise: "I spent 50 hours in my front yard" versus "in ketchup" is the same production and a completely different click.
 - **Can the promise be stated in one concrete sentence?** If not, the idea isn't finished.
-- **Is there proof of demand?** Look for videos on similar ideas that far outperformed their own channel's normal numbers (outliers), in this niche or an adjacent one. Model the premise or format, never the content itself.
+- **Is there proof of demand?** Look for videos on similar ideas that far outperformed their own channel's normal numbers (outliers), in this niche or an adjacent one. Model the premise or format, never the content itself. If you can search, compare a candidate video's views with that channel's typical views. If you can't, say demand is unchecked and give the user the two-minute check to run themselves: search the idea on YouTube, open a few results from small channels, and see whether any video has several times that channel's usual views.
 - **What is the one thing here a viewer can't get from a similar channel?** It doesn't need budget; it needs to be distinctive.
 - **Does it have built-in stakes?** Something can be won, lost, proven, broken or finished.
 
@@ -58,6 +60,7 @@ Write the title and thumbnail concept as one unit, before the script.
 - Pair curiosity with a second pull: something the viewer wants, or something they'd like to avoid.
 - Concrete beats clever. Lead with the specific subject or outcome. Around six words or fewer is the most consistent pattern in industry data (correlational).
 - Stronger wording raises clicks only up to what the video really delivers.
+- Every title on the shortlist must make the *same* promise the whole video pays off, so that any of them fits the same opening line. A title that promises one early moment is a clip title, not a video title; move it to the clip candidates.
 
 **Thumbnails.** Describe 3 genuinely different concepts, not colour variations.
 
@@ -89,7 +92,7 @@ Structure the body as a series of loops, each one **setup → tension → payoff
 - **Place a deliberate high point where boredom is expected** — about a quarter and about halfway through a long video. Something genuinely impressive that belongs to the story.
 - **Restate the goal and where we are** at each new segment. Viewers who lose the thread leave.
 - **Vary the emotional line.** Attention is held by change: an early surprise, then separate peaks of humour, small wins or reveals. A pleasant but flat stretch loses people.
-- **Speak to one person, into the lens,** and include small real admissions (what went wrong, what you were unsure of). This is what builds the feeling of knowing the creator, which is why viewers come back.
+- **Speak to one person, into the lens,** and include small real admissions (what went wrong, what you were unsure of). This is what builds the feeling of knowing the creator, which is why viewers come back. For narration over gameplay or screen footage, the equivalent is first-person voice ("I", "you"), a natural unscripted-sounding read, and showing the admissions on screen: the failed attempt, the ugly first version, the bug.
 
 ## Stage 5 — Ending
 
@@ -142,7 +145,10 @@ Match the output to the request; don't dump every stage on someone who asked for
 ```
 # [Working title]
 **Promise:** one sentence — what the viewer gets
-**Viewer and format:** who, platform, target length
+**Viewer and format:** who, platform, target length, on camera or voiceover
+**Assumptions:** what you assumed because the user didn't say
+**Angle:** the idea you chose, why, and the two or three runners-up (don't list all 20)
+**Demand check:** what you found, or "unchecked" plus how to check
 
 ## Packaging
 Titles (10, best 3 marked, with why)
@@ -160,6 +166,10 @@ The six checks, answered
 
 ## Clip candidates (if long-form)
 3–5 moments that stand alone, each with its own hook line
+
+## Needed from you
+Every bracketed placeholder in the script, as a list of facts to supply
+Shots or recordings still to capture, if the footage doesn't cover the outline
 ```
 
 **For a review of a script, outline or cut**, give: a one-paragraph verdict; the biggest problem first with the stage it belongs to; specific rewrites (show the new line, don't just describe it); what is already working and should be kept.
