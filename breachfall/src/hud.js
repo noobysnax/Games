@@ -5,7 +5,7 @@ const $ = (id) => document.getElementById(id);
 export class Hud {
   constructor() {
     this.el = { hud: $('hud'), round: $('round'), points: $('points'), ammo: $('ammo'), reserve: $('reserve'), wname: $('wname'), wcls: $('wcls'), hp: $('hpFill'), hpNum: $('hpNum'), nades: $('nades'),
-      prompt: $('prompt'), hint: $('hint'), banner: $('banner'), pops: $('pops'), cross: $('cross'), hit: $('hitmark'), hurt: $('hurt'), powers: $('powers'), toast: $('toast'), scope: $('scope'), left: $('left'), other: $('other') };
+      prompt: $('prompt'), hint: $('hint'), banner: $('banner'), pops: $('pops'), cross: $('cross'), hit: $('hitmark'), hurt: $('hurt'), powers: $('powers'), toast: $('toast'), scope: $('scope'), left: $('left'), other: $('other'), boss: $('bossbar'), bossFill: $('bossFill'), bossName: $('bossName'), team: $('team'), room: $('room'), charge: $('charge') };
     this.cache = {}; this.bannerT = 0; this.toastT = 0; this.hitT = 0; this.powerEls = {};
   }
   show(on) { this.el.hud.hidden = !on; }
@@ -45,5 +45,21 @@ export class Hud {
     if (this.toastT > 0 && (this.toastT -= dt) <= 0) this.el.toast.classList.remove('show');
     if (this.hitT > 0 && (this.hitT -= dt) <= 0) this.el.hit.className = '';
   }
+  boss(name, frac) {
+    const on = frac != null; this.el.boss.hidden = !on; if (!on) return;
+    if (this.cache.bossName !== name) { this.cache.bossName = name; this.el.bossName.textContent = name; }
+    this.el.bossFill.style.transform = `scaleX(${Math.max(0, frac).toFixed(3)})`;
+  }
+  // co-op: [{ name, hp, mhp, dead, color }]
+  team(list) {
+    const key = list.map((p) => `${p.name}|${Math.ceil(p.hp)}|${p.mhp}|${p.dead}`).join(',');
+    if (this.cache.team === key) return; this.cache.team = key;
+    this.el.team.hidden = !list.length;
+    this.el.team.innerHTML = list.map((p) => `<div class="mate${p.dead ? ' down' : ''}"><b style="color:${p.color}">${esc(p.name)}</b><span class="meter"><i style="transform:scaleX(${(Math.max(0, p.hp) / p.mhp).toFixed(2)})"></i></span><em>${p.dead ? 'down' : Math.ceil(p.hp)}</em></div>`).join('');
+  }
+  room(code) { this.el.room.hidden = !code; if (code) this.el.room.innerHTML = `Room <b>${code}</b>`; }
+  charge(on) { this.el.charge.hidden = !on; }
   reset() { for (const k in this.powerEls) this.powerEls[k].remove(); this.powerEls = {}; this.el.pops.innerHTML = ''; this.el.banner.classList.remove('show'); this.cache = {}; this.prompt(null); }
 }
+
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

@@ -1,6 +1,6 @@
 // Headless checks of the rules the game depends on: the level builds, zones start sealed off from each other,
 // each gate opens for the right weapon tier and no lower one, and cut-off pieces are found and lifted out.
-import { SX, SY, SZ, FY, VOX, WEAPONS, MAT } from '../src/config.js';
+import { SX, SY, SZ, FY, UFY, VOX, WEAPONS, MAT } from '../src/config.js';
 import { World, hash3 } from '../src/voxels.js';
 import { meshBox } from '../src/mesher.js';
 import { buildMap, zoneAt } from '../src/map.js';
@@ -24,16 +24,18 @@ ok(quads > 5000 && quads < 900000, 'quad count is sane');
 const [nav, tNav] = ms(() => new Nav(world));
 console.log(`nav built in ${tNav.toFixed(0)} ms`);
 const P = map.spawn;
-ok(nav.walkable(P.x, P.z), 'player spawn is walkable');
+const fy0 = map.floorY;
+ok(nav.walkable(P.x, fy0, P.z), 'player spawn is walkable');
 ok(!world.boxSolid(P.x - 0.25, map.floorY, P.z - 0.25, P.x + 0.25, map.floorY + 1.75, P.z + 0.25), 'player spawn is clear');
-for (const zn of map.zones) for (const s of zn.spawns) { ok(nav.walkable(s[0], s[1]) && zoneAt(map, s[0], s[1]) === zn, `zone ${zn.id} spawn ${s} is walkable and inside its zone`); }
+const zy = (zn) => (zn.under ? map.underY : fy0);
+for (const zn of map.zones) for (const s of zn.spawns) { ok(nav.walkable(s[0], zy(zn), s[1]) && zoneAt(map, s[0], s[1], zy(zn)) === zn, `zone ${zn.id} spawn ${s} is walkable and inside its zone`); }
 for (const c of map.crates) ok(zoneAt(map, c.x, c.z)?.id === c.zone, `crate spot in zone ${c.zone}`);
 
-const reach = (zid) => { const zn = map.zones.find((z) => z.id === zid); const s = zn.spawns[0] || [40, 42.5]; return nav.reachable(s[0], s[1]); };
-const flow = () => { const [, t] = ms(() => nav.flow(P.x, P.z)); return t; };
+const reach = (zid) => { const zn = map.zones.find((z) => z.id === zid); const s = zn.spawns[0] || { E: [40, 42.5], G: [40, 36] }[zid]; return nav.reachable(s[0], zy(zn), s[1]); };
+const flow = () => { const [, t] = ms(() => nav.flow([{ x: P.x, y: fy0, z: P.z }])); return t; };
 console.log(`flow field in ${flow().toFixed(1)} ms`);
-ok(map.zones[0].spawns.every((s) => nav.reachable(s[0], s[1])), 'all safehouse spawns reach the player');
-ok(!reach('B') && !reach('C') && !reach('D') && !reach('E'), 'zones B to E start sealed');
+ok(map.zones[0].spawns.every((s) => nav.reachable(s[0], fy0, s[1])), 'all safehouse spawns reach the player');
+ok(!reach('B') && !reach('C') && !reach('D') && !reach('E') && !reach('F') && !reach('G'), 'zones B to G start sealed');
 
 // fire a weapon at a wall point from a given side: n shots, each `pellets` hits scattered around the aim point
 function shoot(wid, x, y, z, dx, dz, shots, tierBoost = 0, sweep = 0) {
@@ -54,9 +56,9 @@ const fy = map.floorY;
 // tier 0 and the timber barricade
 let r = shoot('rook', 15, fy + 1, 7.5, 1, 0, 40); flow();
 ok(r.removed === 0 && !reach('B'), 'pistol cannot open the timber barricade');
-r = shoot('breaker', 15, fy + 1.0, 7.5, 1, 0, 9, 0, 0.45); flow();
-console.log(`  breaker: 9 shells removed ${r.removed} voxels, ${r.islands} loose pieces`);
-ok(reach('B'), 'nine Breaker shells swept over the barricade open the timber barricade for zombies');
+r = shoot('breaker', 15, fy + 1.0, 7.5, 1, 0, 10, 0, 0.45); flow();
+console.log(`  breaker: 10 shells removed ${r.removed} voxels, ${r.islands} loose pieces`);
+ok(reach('B'), 'ten Breaker shells swept over the barricade open the timber barricade for zombies');
 // can the player fit through? look for a 0.5 x 1.75 m gap somewhere along the gate
 let fit = false; for (let z = 6.3; z < 8.8 && !fit; z += 0.0625) for (let up = 0; up <= 0.5; up += 0.125) if (!world.boxSolid(14.8, fy + up, z - 0.25, 15.5, fy + up + 1.75, z + 0.25)) fit = true;
 ok(fit, 'the hole is big enough for the player (with a step up)');
@@ -83,6 +85,19 @@ ok(!reach('E'), 'plain rockets do not open the vault');
 r = shoot('ramrod', 36, fy + 1.5, 39.5, 1, 0, 2, 1); flow();
 console.log(`  overclocked ramrod: 2 rockets removed ${r.removed} voxels`);
 ok(reach('E'), 'overclocked rockets open the vault');
+ok(reach('F'), 'the vault stairs lead down into the Undercroft');
+// and the other way: from the arena floor the stairs climb back up to the street
+nav.flow([{ x: 24, y: map.underY, z: 40 }]);
+ok(nav.reachable(P.x, fy0, P.z), 'the Undercroft connects back up to the safehouse');
+nav.flow([{ x: P.x, y: fy0, z: P.z }]);
+ok(!reach('G'), 'the deep vault is still sealed');
+r = shoot('ramrod', 36.5, map.underY + 1.5, 39.5, 1, 0, 3, 1); flow();
+ok(world.get(Math.round(36.9 / VOX), Math.round((map.underY + 1.5) / VOX), Math.round(39.5 / VOX)) >= 55 && !reach('G'), 'overclocked rockets do nothing to vault alloy');
+r = shoot('ramrod', 36.5, map.underY + 1.5, 39.5, 1, 0, 2, 2); flow();
+console.log(`  fusion-charged rockets: removed ${r.removed} voxels`);
+ok(reach('G'), 'fusion-charged rockets open the deep vault');
+const vy = Math.round(map.underY / VOX) - 1, solidUnder = world.get(Math.round(40 / VOX), vy - 3, Math.round(38 / VOX));
+ok(MAT[solidUnder].tier >= 9, 'the deep vault sits on unbreakable rock');
 
 // structural: saw through the four legs of the water tank, the tank must come loose as one piece
 let loose = [];
@@ -94,6 +109,8 @@ ok(world.get(Math.round(14 / VOX), FY + Math.round(4 / VOX), Math.round(18.8 / V
 ok(world.data.every((m) => m < 64), 'no flood-fill flags left behind');
 
 const [, tBlast] = ms(() => { const c = world.carve(30, fy + 1, 22, 2.3, 3); world.findIslands(c.seeds); });
+const [, tFloor] = ms(() => { const c = world.carve(20, fy, 40, 2.3, 3); world.findIslands(c.seeds); });
+console.log(`  rocket into the research block floor (over the arena): ${tFloor.toFixed(1)} ms`);
 console.log(`  rocket blast in the racks: ${tBlast.toFixed(1)} ms, ${world.dirtyChunks.size} chunks to remesh`);
 
 console.log(fails ? `\n${fails} check(s) failed` : '\nall checks passed');

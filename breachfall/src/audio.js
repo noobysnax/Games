@@ -35,12 +35,12 @@ export class Audio {
     o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.02);
   }
 
-  shot(kind) {
+  shot(kind, k = 1) {
     const S = { pistol: [0.14, 0.5, 2600, 500, 190], smg: [0.1, 0.4, 3200, 700, 230], rifle: [0.17, 0.55, 2200, 380, 150], lmg: [0.19, 0.6, 1800, 300, 120],
       shotgun: [0.34, 0.85, 1500, 160, 80], sniper: [0.5, 0.95, 1900, 140, 70], thump: [0.22, 0.5, 500, 90, 110], rocket: [0.55, 0.7, 900, 120, 60] }[kind];
     if (!S) return;
-    this.noise(S[0], S[1], 'lowpass', S[2], S[3], 0.7); this.tone('triangle', S[4], S[4] * 0.35, S[0] * 0.8, S[1] * 0.7);
-    if (kind === 'sniper' || kind === 'shotgun') this.noise(0.8, 0.12, 'bandpass', 900, 300, 0.5, 0.05);
+    this.noise(S[0], S[1] * k, 'lowpass', S[2] * (0.5 + k * 0.5), S[3], 0.7); this.tone('triangle', S[4], S[4] * 0.35, S[0] * 0.8, S[1] * 0.7 * k);
+    if (kind === 'sniper' || kind === 'shotgun') this.noise(0.8, 0.12 * k, 'bandpass', 900, 300, 0.5, 0.05);
   }
   arc(on) {
     const c = this.ctx; if (!c) return;
@@ -84,5 +84,26 @@ export class Audio {
   crateDone() { [784, 988, 1175, 1568].forEach((f, i) => this.tone('triangle', f, f, 0.22, 0.11, i * 0.07)); }
   power() { [392, 523, 659, 784].forEach((f, i) => this.tone('square', f, f, 0.16, 0.06, i * 0.06)); }
   upgrade() { this.tone('sawtooth', 110, 880, 1.1, 0.1); this.noise(1.1, 0.12, 'bandpass', 400, 4000, 2); [880, 1320, 1760].forEach((f, i) => this.tone('triangle', f, f, 0.3, 0.1, 1.1 + i * 0.08)); }
+  roar(d) {
+    const c = this.ctx, v = this.far(d, 60) * 0.5; if (!c || v < 0.004) return;
+    const t = c.currentTime, o = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+    o.type = 'sawtooth'; o2.type = 'square'; o.frequency.setValueAtTime(70, t); o.frequency.linearRampToValueAtTime(42, t + 1.8); o2.frequency.setValueAtTime(53, t); o2.frequency.linearRampToValueAtTime(36, t + 1.8);
+    f.type = 'lowpass'; f.frequency.setValueAtTime(900, t); f.frequency.linearRampToValueAtTime(300, t + 1.8);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.25); g.gain.exponentialRampToValueAtTime(0.0008, t + 2.0);
+    o.connect(f); o2.connect(f); f.connect(g); g.connect(this.master); o.start(t); o2.start(t); o.stop(t + 2.1); o2.stop(t + 2.1);
+    this.noise(1.6, v * 0.5, 'bandpass', 600, 200, 0.8);
+  }
+  matter(mode) {
+    const c = this.ctx; if (!c) return;
+    if (mode && !this.mat) {
+      const o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o2.type = 'sine';
+      o.frequency.value = mode === 2 ? 70 : 140; o2.frequency.value = mode === 2 ? 211 : 420; g.gain.value = 0.0001; g.gain.setTargetAtTime(0.1, c.currentTime, 0.05);
+      o.connect(g); o2.connect(g); g.connect(this.master); o.start(); o2.start(); this.mat = { o, o2, g, mode };
+    } else if (this.mat && (!mode || mode !== this.mat.mode)) {
+      const m = this.mat; this.mat = null; m.g.gain.setTargetAtTime(0, c.currentTime, 0.04); m.o.stop(c.currentTime + 0.25); m.o2.stop(c.currentTime + 0.25);
+      if (mode) this.matter(mode);
+    }
+  }
+  whoosh(speed) { this.noise(0.25, Math.min(0.3, speed / 60), 'bandpass', 300 + speed * 40, 200, 1.2); }
   zone() { [196, 294, 392].forEach((f, i) => this.tone('triangle', f, f, 0.5, 0.1, i * 0.1)); }
 }

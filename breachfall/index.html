@@ -64,7 +64,7 @@ h1 span{color:var(--haz)}
 .btn:focus-visible,.ghost:focus-visible,select:focus-visible,input:focus-visible,.tab:focus-visible{outline:2px solid var(--haz);outline-offset:3px}
 #bestRound{font-family:var(--f-mono);font-size:12px;color:var(--ink-faint)}
 .ctl{display:flex;flex-direction:column;gap:10px}
-.tabs{display:flex;gap:4px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px}
 .tab{appearance:none;cursor:pointer;font:inherit;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);background:transparent;border:0;border-bottom:2px solid transparent;padding:4px 10px}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--haz)}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px;color:var(--ink-dim);align-items:center;margin:0}
@@ -154,6 +154,29 @@ select{font:inherit;font-size:15px;color:var(--ink);background:#1b1c20;border:1p
 #toast{position:fixed;left:50%;top:calc(62px + env(safe-area-inset-top,0px));transform:translate(-50%,-6px);background:var(--glass-strong);border:1px solid var(--line);border-left:3px solid var(--haz);padding:7px 16px;font-size:16px;opacity:0;transition:opacity .25s,transform .25s;z-index:30;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
+/* boss, team, room */
+#bossbar{position:absolute;left:50%;top:calc(52px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(520px,calc(100vw - 140px));display:flex;flex-direction:column;gap:4px;align-items:center}
+#bossName{font-family:var(--f-display);font-size:22px;letter-spacing:.06em;color:var(--blood);line-height:1}
+#bossbar .meter{width:100%;height:9px;background:rgba(0,0,0,.55);border:1px solid rgba(208,68,46,.5);overflow:hidden}
+#bossFill{display:block;height:100%;background:linear-gradient(90deg,#8a1a0e,var(--blood));transform-origin:left;transition:transform .15s}
+#team{position:absolute;left:max(18px,env(safe-area-inset-left,0px));top:calc(40px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:5px;background:var(--glass);padding:8px 10px;border-left:3px solid var(--haz);min-width:180px}
+.mate{display:grid;grid-template-columns:1fr 70px 30px;gap:8px;align-items:center;font-size:14px}
+.mate b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.mate .meter{height:5px;background:rgba(255,255,255,.14);overflow:hidden}
+.mate .meter i{display:block;height:100%;background:var(--ink);transform-origin:left}
+.mate em{font-style:normal;font-family:var(--f-mono);font-size:11px;color:var(--ink-dim);text-align:right}
+.mate.down b,.mate.down em{color:var(--blood)}
+#room{position:absolute;left:max(18px,env(safe-area-inset-left,0px));top:calc(26px + env(safe-area-inset-top,0px));font-family:var(--f-mono);font-size:11px;color:var(--ink-dim);letter-spacing:.06em}
+#room b{color:var(--haz);font-weight:500;letter-spacing:.2em}
+#charge{font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:#d8c4ff;background:rgba(120,80,220,.35);border:1px solid rgba(176,128,255,.7);padding:2px 8px;align-self:flex-end}
+.coop{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
+.coop .row{gap:8px}
+.coop input{font:inherit;font-size:16px;color:var(--ink);background:#1b1c20;border:1px solid var(--line);padding:9px 11px;min-width:0}
+#nameIn{width:170px}
+#codeIn{width:110px;font-family:var(--f-mono);letter-spacing:.3em;text-transform:uppercase}
+#coopMsg{min-height:1em}
+#pauseRoom b{color:var(--haz);font-family:var(--f-mono);letter-spacing:.2em}
+
 /* touch */
 #touch{position:fixed;inset:0;z-index:12;pointer-events:none}
 #stickZone{position:absolute;left:0;bottom:0;width:42%;height:70%;pointer-events:auto;touch-action:none}
@@ -173,6 +196,8 @@ select{font:inherit;font-size:15px;color:var(--ink);background:#1b1c20;border:1p
 .tbtns [data-act=melee]{right:132px;bottom:164px}
 
 @media (max-width:700px){
+  #team{display:none}
+  #bossName{font-size:17px}
   #round{font-size:56px}
   #ammo{font-size:30px}
   .hud-br{min-width:0}
@@ -207,6 +232,9 @@ select{font:inherit;font-size:15px;color:var(--ink);background:#1b1c20;border:1p
   <div id="cross"><i></i><i></i><i></i><i></i><b></b></div>
   <div id="hitmark"></div>
   <div class="hud-tc"><span id="hint" hidden></span></div>
+  <div id="bossbar" hidden><span id="bossName">The Warden</span><div class="meter"><i id="bossFill"></i></div></div>
+  <div id="room" hidden></div>
+  <div id="team" hidden></div>
   <div id="powers"></div>
   <button class="hudbtn" id="pauseBtn" type="button" aria-label="Pause">II</button>
   <div id="banner"></div>
@@ -217,6 +245,7 @@ select{font:inherit;font-size:15px;color:var(--ink);background:#1b1c20;border:1p
     <div class="roundrow"><span id="round">00</span><span id="left">Get ready</span></div>
   </div>
   <div class="hud-br">
+    <span id="charge" hidden>Fusion-charged</span>
     <span id="other"></span>
     <span id="wname">Rook .45</span>
     <span id="wcls">Pistol</span>
@@ -243,22 +272,36 @@ select{font:inherit;font-size:15px;color:var(--ink);background:#1b1c20;border:1p
 
 <section id="intro" class="screen boot">
   <div class="panel">
-    <p class="eyebrow">Voxel siege survival</p>
+    <p class="eyebrow">Voxel siege survival · solo or co-op</p>
     <h1>Breach<span>fall</span></h1>
-    <p class="lede">Hold the safehouse against the horde. Every hit earns points; spend them on heavier guns off the walls or gamble on the crate. Everything you shoot breaks, and whatever loses its support comes crashing down. Heavier weapons break tougher walls and open the rest of the block.</p>
+    <p class="lede">Hold the safehouse against the horde, alone or with friends. Every hit earns points; spend them on heavier guns off the walls or gamble on the crate. Everything you shoot breaks, and whatever loses its support comes crashing down. Heavier weapons break tougher walls and open the rest of the block.</p>
     <ul class="ladder" aria-label="What breaks what">
       <li><span class="sw"><i style="background:#a87a45"></i>Timber</span><span class="by">shotgun or rifle</span><span class="zn">→ street &amp; yard</span></li>
       <li><span class="sw"><i style="background:#9a4a36"></i>Brick</span><span class="by">grenade launcher or frags</span><span class="zn">→ warehouse</span></li>
       <li><span class="sw"><i style="background:#8e9094"></i>Concrete</span><span class="by">rocket launcher</span><span class="zn">→ research block</span></li>
       <li><span class="sw"><i style="background:#56636f"></i>Vault steel</span><span class="by">overclocked launcher or Arc Lance</span><span class="zn">→ vault</span></li>
+      <li><span class="sw"><i style="background:#9a70ff"></i>Vault alloy</span><span class="by">the Warden's fusion core</span><span class="zn">→ deep vault</span></li>
     </ul>
     <div class="load" id="load"><div class="bar"><i id="loadFill"></i></div><span id="loadText">Loading…</span></div>
-    <div class="row"><button class="btn" id="startBtn" type="button" disabled>Deploy</button><span id="bestRound"></span></div>
+    <div class="row"><button class="btn" id="startBtn" type="button" disabled>Deploy solo</button><span id="bestRound"></span></div>
+    <div class="coop">
+      <div class="row">
+        <div class="field"><label for="nameIn">Your name</label><input id="nameIn" maxlength="16" autocomplete="nickname"></div>
+      </div>
+      <div class="row">
+        <button class="ghost" id="hostBtn" type="button">Host co-op</button>
+        <span class="note">or</span>
+        <input id="codeIn" maxlength="5" placeholder="CODE" aria-label="Room code" autocomplete="off" spellcheck="false">
+        <button class="ghost" id="joinBtn" type="button">Join</button>
+      </div>
+      <p class="note" id="coopMsg">Hosting gives you a five-letter room code. Friends type it here to join your game.</p>
+    </div>
     <div class="ctl" data-ctl>
       <div class="tabs" role="tablist" aria-label="Controls">
         <button class="tab" role="tab" type="button" data-tab="keyboard" id="tabK1">Keyboard</button>
         <button class="tab" role="tab" type="button" data-tab="gamepad" id="tabG1">Controller</button>
         <button class="tab" role="tab" type="button" data-tab="touch" id="tabT1">Touch</button>
+        <button class="tab" role="tab" type="button" data-tab="matter" id="tabM1">Matter Destroyer</button>
       </div>
       <div data-panel></div>
     </div>
@@ -271,7 +314,9 @@ select{font:inherit;font-size:15px;color:var(--ink);background:#1b1c20;border:1p
     <div class="row">
       <button class="btn" id="resumeBtn" type="button">Resume</button>
       <button class="ghost" id="restartBtn" type="button">Restart run</button>
+      <button class="ghost" id="leaveBtn" type="button" hidden>Leave co-op</button>
     </div>
+    <p class="note" id="pauseRoom" hidden></p>
     <div class="row">
       <div class="field" style="flex:1;min-width:120px"><label for="qualSel">Quality</label>
         <select id="qualSel"><option value="0">Light</option><option value="1">Balanced</option><option value="2">Cinematic</option></select></div>
@@ -287,6 +332,7 @@ select{font:inherit;font-size:15px;color:var(--ink);background:#1b1c20;border:1p
         <button class="tab" role="tab" type="button" data-tab="keyboard" id="tabK2">Keyboard</button>
         <button class="tab" role="tab" type="button" data-tab="gamepad" id="tabG2">Controller</button>
         <button class="tab" role="tab" type="button" data-tab="touch" id="tabT2">Touch</button>
+        <button class="tab" role="tab" type="button" data-tab="matter" id="tabM2">Matter Destroyer</button>
       </div>
       <div data-panel></div>
     </div>

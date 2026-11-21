@@ -7,7 +7,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { Pass } from 'three/addons/postprocessing/Pass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { VOX, SX, SY, SZ, CH } from './config.js';
+import { VOX, SX, SY, SZ, CH, FY } from './config.js';
 import { meshBox } from './mesher.js';
 
 export const QUALITY = [
@@ -143,7 +143,7 @@ export class Gfx {
     const m = new THREE.Matrix4();
     for (let i = 0; i < 70; i++) {
       const a = rnd() * Math.PI * 2, d = 58 + rnd() * 90, w = 8 + rnd() * 16, h = 8 + rnd() * rnd() * 46, dd = 8 + rnd() * 16;
-      const b = new THREE.BoxGeometry(w, h, dd); m.makeRotationY(rnd() * 0.5).setPosition(24 + Math.cos(a) * d, h / 2 - 1, 24 + Math.sin(a) * d); b.applyMatrix4(m); g.push(b);
+      const b = new THREE.BoxGeometry(w, h, dd); m.makeRotationY(rnd() * 0.5).setPosition(24 + Math.cos(a) * d, h / 2 - 1, 24 + Math.sin(a) * d); b.translate(0, FY * VOX, 0); b.applyMatrix4(m); g.push(b);
     }
     const pos = [], idx = []; let base = 0;
     for (const b of g) { pos.push(...b.attributes.position.array); for (const i of b.index.array) idx.push(i + base); base += b.attributes.position.count; b.dispose(); }
@@ -151,7 +151,7 @@ export class Gfx {
     const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: 0x35323a }));
     this.scene.add(mesh);
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), new THREE.MeshLambertMaterial({ color: 0x3a3838 }));
-    ground.rotation.x = -Math.PI / 2; ground.position.set(24, 0.3, 24); this.scene.add(ground);
+    ground.rotation.x = -Math.PI / 2; ground.position.set(24, FY * VOX - 0.45, 24); this.scene.add(ground);
   }
 
   /* ------------------------------------------- occupancy volume for soft occlusion */
@@ -199,9 +199,9 @@ export class Gfx {
     return geo;
   }
   // a free-standing voxel mesh (falling pieces), positions in voxel units
-  voxelMesh(md) {
+  voxelMesh(md, vs = VOX) {
     const geo = this.geometry(md); geo.computeBoundingSphere();
-    const mesh = new THREE.Mesh(geo, this.bodyMat); mesh.scale.setScalar(VOX); mesh.castShadow = true; mesh.receiveShadow = true;
+    const mesh = new THREE.Mesh(geo, this.bodyMat); mesh.scale.setScalar(vs); mesh.castShadow = true; mesh.receiveShadow = true;
     return mesh;
   }
   buildAll(onProgress) {

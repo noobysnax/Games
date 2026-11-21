@@ -12,12 +12,12 @@
 // A is walled in brick with two timber barricades (tier 1). C is brick (tier 2), D concrete (tier 3),
 // E steel (tier 4). Every wall of a tier breaks the same way, the hazard-striped panels are just hints.
 
-import { VOX, SX, SY, SZ, FY, ID } from './config.js';
+import { VOX, SX, SY, SZ, FY, UFY, ID } from './config.js';
 import { hash3 } from './voxels.js';
 
 export function buildMap(w) {
   const { BEDROCK, ASPHALT, DIRT, TILE, TIMBER, TIMBER_D, PLASTER, GLASS, BRICK, BRICK_B, CONC, CONC_B, STEEL, SHEET, HAZ1, HAZ2, HAZ3, HAZ4,
-    BLK1, LAMP, LEAF, TRUNK, RUST, CRATE, WALL, WALL_B, BLK2, BLK3, BLK4, GRASS, FABRIC, PAINT_B, PAINT_Y, LABTILE, GOLD, SCREEN } = ID;
+    BLK1, LAMP, LEAF, TRUNK, RUST, CRATE, WALL, WALL_B, BLK2, BLK3, BLK4, GRASS, FABRIC, PAINT_B, PAINT_Y, LABTILE, GOLD, SCREEN, ALLOY, ALLOY_GLOW, ROCK, ROCK_B, RED_LAMP, CORE } = ID;
   const v = (m) => Math.round(m / VOX);
   const box = (x0, y0, z0, x1, y1, z1, mat) => w.fill(v(x0), FY + v(y0), v(z0), v(x1), FY + v(y1), v(z1), mat);
   const brick = (x, y, z) => { const row = y >> 1, bi = Math.floor((x + z + (row & 1) * 3) / 5); return hash3(bi, row, 7) < 0.34 ? BRICK_B : BRICK; };
@@ -27,9 +27,9 @@ export function buildMap(w) {
   const blast = (x, y, z) => ((y - FY) % 12 >= 10 || (x + z) % 32 === 0 ? WALL_B : WALL);
   const stripes = (a, b) => (x, y, z) => (((x + y + z) >> 2) & 1 ? a : b);
   const lamps = [];
-  const lamp = (x, y, z, color = 0xffc98a, power = 1, size = 2) => {
-    const vx = v(x), vy = FY + v(y), vz = v(z);
-    w.fill(vx - (size >> 1), vy, vz - (size >> 1), vx + ((size + 1) >> 1), vy + 1, vz + ((size + 1) >> 1), LAMP);
+  const lamp = (x, y, z, color = 0xffc98a, power = 1, size = 2, base = FY, mat = LAMP) => {
+    const vx = v(x), vy = base + v(y), vz = v(z);
+    w.fill(vx - (size >> 1), vy, vz - (size >> 1), vx + ((size + 1) >> 1), vy + 1, vz + ((size + 1) >> 1), mat);
     lamps.push({ x, y: (vy - 1) * VOX, z, color, power, vox: [vx, vy, vz] });
   };
   const sphere = (cx, cy, cz, r, mat, fillP = 1) => {
@@ -70,13 +70,14 @@ export function buildMap(w) {
   };
 
   /* ------------------------------------------------------------ ground */
-  w.fill(0, 0, 0, SX, 4, SZ, BEDROCK);
-  w.fill(0, 4, 0, SX, FY, SZ, ASPHALT);
-  w.fill(v(1), 4, v(16.375), v(20), FY, v(32), (x, y, z) => (hash3(x >> 3, 5, z >> 3) < 0.22 || (y === 4) ? DIRT : GRASS));
-  w.fill(v(1), 4, v(1), v(15), FY, v(16), planksH);
-  w.fill(v(20.375), 4, v(14.375), v(47), FY, v(32), TILE);
-  w.fill(v(1), 4, v(32.5), v(36), FY, v(47), (x, y, z) => ((x % 8 === 0 || z % 8 === 0) && y === FY - 1 ? CONC_B : LABTILE));
-  w.fill(v(36.5), 4, v(32.5), v(47), FY, v(47), STEEL);
+  const G0 = FY - 2;
+  w.fill(0, 0, 0, SX, G0, SZ, (x, y, z) => (hash3(x >> 2, y >> 2, z >> 2) < 0.3 ? ROCK_B : ROCK));
+  w.fill(0, G0, 0, SX, FY, SZ, ASPHALT);
+  w.fill(v(1), G0, v(16.375), v(20), FY, v(32), (x, y, z) => (hash3(x >> 3, 5, z >> 3) < 0.22 || (y === G0) ? DIRT : GRASS));
+  w.fill(v(1), G0, v(1), v(15), FY, v(16), planksH);
+  w.fill(v(20.375), G0, v(14.375), v(47), FY, v(32), TILE);
+  w.fill(v(1), G0, v(32.5), v(36), FY, v(47), (x, y, z) => ((x % 8 === 0 || z % 8 === 0) && y === FY - 1 ? CONC_B : LABTILE));
+  w.fill(v(36.5), G0, v(32.5), v(47), FY, v(47), STEEL);
   // lane dashes on the street
   for (let x = 17; x < 46; x += 3) w.fill(v(x), FY - 1, v(7.4), v(x + 1.5), FY, v(7.6), PLASTER);
 
@@ -236,15 +237,57 @@ export function buildMap(w) {
   frame(36, 0, 38, 36.5, 2.75, 41, HAZ4, BLK4);
   // door ring relief on the lab side
   { const X = v(36) - 1, Y = FY + v(1.3), Z = v(39.5); w.fill(X, Y - 9, Z - 9, X + 1, Y + 10, Z + 10, (x, y, z) => { const d = Math.hypot(y - Y, z - Z); return (d > 6.5 && d < 8.6) || d < 1.6 ? STEEL : -1; }); }
-  for (const [x, z, n] of [[38, 34, 3], [44, 34, 4], [45, 44, 4], [38, 45, 3], [45, 39, 2]]) for (let i = 0; i < n; i++) box(x - 0.6 + i * 0.12, i * 0.25, z - 0.4 + i * 0.06, x + 0.6 - i * 0.12, i * 0.25 + 0.25, z + 0.4 - i * 0.06, GOLD);
-  box(41.4, 0, 39.4, 42.6, 0.9, 40.6, STEEL); box(41.3, 0.9, 39.3, 42.7, 1.0, 40.7, GOLD);
-  lamp(42, 3.87, 36, 0xffe2a0, 1.1, 4); lamp(42, 3.87, 43, 0xffe2a0, 1.1, 4);
+  const goldPile = (x, z, n, base = FY, mat = GOLD) => { for (let i = 0; i < n; i++) w.fill(v(x - 0.6 + i * 0.12), base + v(i * 0.25), v(z - 0.4 + i * 0.06), v(x + 0.6 - i * 0.12), base + v(i * 0.25 + 0.25), v(z + 0.4 - i * 0.06), mat); };
+  for (const [x, z, n] of [[38, 34.2, 3], [40.6, 34.2, 4], [38, 46, 3], [40.8, 46, 4], [38.2, 43.4, 2]]) goldPile(x, z, n);
+  box(39, 0, 39.9, 40.2, 0.9, 41.1, STEEL); box(38.9, 0.9, 39.8, 40.3, 1.0, 41.2, GOLD);
+  lamp(41, 3.87, 36, 0xffe2a0, 1.1, 4); lamp(41, 3.87, 43, 0xffe2a0, 1.1, 4);
+
+  /* ---------------------------------------------------- underground (y in voxels from here) */
+  const ub = (x0, y0, z0, x1, y1, z1, mat) => w.fill(v(x0), UFY + v(y0), v(z0), v(x1), UFY + v(y1), v(z1), mat);
+  const TOP = FY - 6;                 // underside of the street-level slab
+  const H = (TOP - UFY) * VOX;        // 4.25 m of headroom underground
+  const slab = (x0, z0, x1, z1, mat) => w.fill(v(x0), TOP, v(z0), v(x1), FY - 2, v(z1), mat);
+  // F: the Undercroft, under the research block
+  ub(12, -0.25, 33.5, 36.5, H, 46.5, 0);
+  w.fill(v(12), UFY - 2, v(33.5), v(36.5), UFY, v(46.5), (x, y, z) => (((x >> 4) + (z >> 4)) & 1 ? CONC_B : CONC));
+  slab(12, 33.5, 36.5, 46.5, (x, y, z) => (hash3(x >> 2, y, z >> 2) < 0.3 ? ROCK_B : ROCK)); // rock ceiling: the stairs are the only way down
+  for (const x of [18, 24, 30]) for (const z of [37.5, 42.5]) {
+    ub(x - 0.375, 0, z - 0.375, x + 0.375, H, z + 0.375, conc);
+    ub(x - 0.4, 1.0, z - 0.4, x + 0.4, 1.25, z + 0.4, stripes(HAZ3, BLK3));
+  }
+  // corridor from the stairs, then the stairs themselves (blast-wall stone, so they can never be destroyed)
+  ub(36.5, 0, 43.5, 46.5, H, 46.5, 0);
+  w.fill(v(36.5), UFY - 2, v(43.5), v(46.5), UFY, v(46.5), CONC);
+  slab(36.5, 43.5, 46.5, 46.5, ROCK);
+  const Z0 = v(33.5);
+  w.fill(v(43), UFY, Z0, v(46.5), FY, v(43.5), 0);
+  w.fill(v(43), UFY, Z0, v(46.5), FY, v(43.5), (x, y, z) => (y < FY - ((z - Z0) >> 1) ? (((z - Z0) >> 1) % 2 ? WALL_B : WALL) : -1));
+  slab(43, 39.5, 46.5, 43.5, ROCK); w.fill(v(43), FY - 2, v(39.5), v(46.5), FY, v(43.5), STEEL);
+  // hazard edge round the stairwell, a rail at the far end
+  w.fill(v(42.75), FY - 1, v(33.5), v(43), FY, v(39.5), stripes(HAZ4, BLK4));
+  box(43, 0, 39.5, 46.5, 1.0, 39.625, SHEET); for (let x = 43; x < 46.5; x += 0.875) box(x, 0, 39.5, x + 0.125, 1.0, 39.75, SHEET);
+  // G: the deep vault, sealed by fusion alloy, directly under the old vault
+  ub(37.25, 0, 33.5, 42.5, H, 42.75, 0);
+  w.fill(v(37.25), UFY - 2, v(33.5), v(42.5), UFY, v(42.75), STEEL);
+  slab(36.5, 33.5, 43, 43.5, ALLOY);
+  ub(36.5, 0, 33.5, 37.25, H, 42.75, (x, y, z) => ((y - UFY) % 10 === 0 || z % 12 === 0 ? ALLOY_GLOW : ALLOY));
+  ub(36.4, 0.4, 37.4, 36.5, 3.0, 40.1, ALLOY_GLOW);
+  ub(39.4, 0, 37.9, 40.6, 0.9, 39.1, STEEL); ub(39.3, 0.9, 37.8, 40.7, 1.0, 39.2, CORE);
+  for (const [x, z, n] of [[38.2, 34.4, 4], [41.6, 34.4, 3], [38.2, 42.0, 3], [41.6, 41.9, 4]]) goldPile(x, z, n, UFY);
+  // arena clutter: wrecked machinery, drums, a collapsed rack
+  for (const [x, z] of [[14, 35], [33.5, 45], [20.5, 45.6], [27, 34.4]]) { ub(x, 0, z, x + 1.4, 1.2, z + 0.9, RUST); ub(x + 0.2, 1.2, z + 0.1, x + 1.0, 1.5, z + 0.7, BLK2); }
+  for (const [x, z] of [[15.5, 45.4], [16.3, 45.6], [35.4, 34.6], [26, 46]]) { w.fill(v(x - 0.3), UFY, v(z - 0.3), v(x + 0.3), UFY + v(0.95), v(z + 0.3), RUST); }
+  for (const [x, z] of [[15, 40], [21, 40], [27, 40], [33, 40], [24, 35], [24, 45], [44.7, 45]]) lamp(x, H - 0.13, z, 0xff6040, 1.4, 3, UFY, RED_LAMP);
+  for (const [x, z] of [[38.5, 36], [41, 41.5]]) lamp(x, H - 0.13, z, 0xb080ff, 1.4, 3, UFY, LAMP);
 
   w.dirtyChunks.clear(); w.dirtyBox = null;
 
   const FYm = FY * VOX;
   return {
     floorY: FYm,
+    underY: UFY * VOX,
+    boss: { x: 24, z: 40 },
+    matter: { x: 40, z: 38.5, y: UFY * VOX + 1.35 },
     spawn: { x: 4.6, z: 6.4, yaw: -Math.PI / 2 },
     zones: [
       { id: 'A', name: 'Safehouse', rects: [[1, 1, 15, 16]], spawns: [[12.2, 15.3], [1.6, 12], [9.2, 9.2], [6.6, 1.9], [14.2, 4.6]] },
@@ -252,6 +295,8 @@ export function buildMap(w) {
       { id: 'C', name: 'Warehouse', rects: [[20.4, 14.4, 47, 32]], spawns: [[22, 17], [45.5, 15.2], [37, 30], [21.5, 26], [36.5, 24], [46, 24.6]] },
       { id: 'D', name: 'Research Block', rects: [[1, 32.5, 36, 47]], spawns: [[9, 33.6], [34.5, 36], [14, 46], [2, 40.8], [30, 45], [20, 40]] },
       { id: 'E', name: 'Vault', rects: [[36.5, 32.5, 47, 47]], spawns: [] },
+      { id: 'F', name: 'The Undercroft', under: true, rects: [[12, 33.5, 36.5, 46.5], [36.5, 43.5, 47, 46.5], [43, 33.5, 46.5, 43.5]], spawns: [[13, 34.5], [13, 45.5], [35.5, 34.5], [22, 45.8], [28, 34.2], [35.5, 45.6]] },
+      { id: 'G', name: 'Deep Vault', under: true, rects: [[37.25, 33.5, 42.5, 42.75]], spawns: [] },
     ],
     // wall racks: x/z on the wall face, facing (nx, nz)
     wallbuys: [
@@ -269,14 +314,16 @@ export function buildMap(w) {
       { kind: 'bench', x: 33.2, z: 45.2, nx: 0, nz: -1 },
     ],
     crates: [{ x: 5, z: 12.4, yaw: 0, zone: 'A' }, { x: 37.6, z: 4.6, yaw: 0, zone: 'B' }, { x: 22.4, z: 30.2, yaw: Math.PI / 2, zone: 'C' }, { x: 9.6, z: 41.2, yaw: 0, zone: 'D' }],
-    pedestal: { x: 42, z: 40, y: FYm + 1.0 },
+    pedestal: { x: 39.6, z: 40.5, y: FYm + 1.0 },
     lamps,
     // where the HUD points you next
-    hints: { A: 'Buy the Breaker 12 and blast through the striped timber barricade', B: 'Brick needs explosives: the Thumper GL is on the yard wall', C: 'Concrete needs the Ramrod RL from the warehouse wall', D: 'Vault steel needs an overclocked launcher or the Arc Lance', E: '' },
+    hints: { A: 'Buy the Breaker 12 and blast through the striped timber barricade', B: 'Brick needs explosives: the Thumper GL is on the yard wall', C: 'Concrete needs the Ramrod RL from the warehouse wall', D: 'Vault steel needs an overclocked launcher or the Arc Lance', E: 'Take the stairs in the corner down into the Undercroft', F: 'Kill the Warden and take its fusion core', G: 'Take the Matter Destroyer from the pedestal' },
   };
 }
 
-export function zoneAt(map, x, z) {
-  for (const zn of map.zones) for (const r of zn.rects) if (x >= r[0] && x < r[2] && z >= r[1] && z < r[3]) return zn;
+// y decides between street level and the underground zones that sit beneath it
+export function zoneAt(map, x, z, y = map.floorY) {
+  const under = y < map.floorY - 1.2;
+  for (const zn of map.zones) if (!!zn.under === under) for (const r of zn.rects) if (x >= r[0] && x < r[2] && z >= r[1] && z < r[3]) return zn;
   return null;
 }

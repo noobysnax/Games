@@ -90,13 +90,13 @@ export class World {
   // Remove a ragged sphere of everything the tier can break. Centre and radius in metres. `tall` stretches it
   // upward and downward, which is what makes a blast on a wall leave a doorway instead of a porthole.
   // Returns { removed, samples: [x,y,z,mat,...] (voxel coords, thinned for debris), seeds: [idx...], toughest }.
-  carve(cx, cy, cz, r, tier, maxSamples = 160, tall = 1) {
+  carve(cx, cy, cz, r, tier, maxSamples = 160, tall = 1, collect = false) {
     const inv = 1 / VOX, vx = cx * inv, vy = cy * inv, vz = cz * inv, vr = r * inv;
     const big = vr * 1.46 * tall + 1, it = 1 / tall;
     const x0 = Math.max(0, Math.floor(vx - big)), x1 = Math.min(this.sx - 1, Math.ceil(vx + big));
     const y0 = Math.max(0, Math.floor(vy - big)), y1 = Math.min(this.sy - 1, Math.ceil(vy + big));
     const z0 = Math.max(0, Math.floor(vz - big)), z1 = Math.min(this.sz - 1, Math.ceil(vz + big));
-    const out = { removed: 0, samples: [], seeds: [], toughest: 0, toughMat: 0, gold: 0 };
+    const out = { removed: 0, samples: [], seeds: [], toughest: 0, toughMat: 0, gold: 0, cidx: collect ? [] : null, cmats: collect ? [] : null };
     const d = this.data, sxz = this.sx * this.sz;
     const keep = Math.min(1, maxSamples / Math.max(1, 4.2 * vr * vr * vr * 0.35));
     let bx0 = 1e9, by0 = 1e9, bz0 = 1e9, bx1 = -1, by1 = -1, bz1 = -1;
@@ -111,7 +111,7 @@ export class World {
         if (k === 0) { if (d2 < vr * vr && t > out.toughest) { out.toughest = t; out.toughMat = m; } continue; }
         const rr = vr * k * (0.82 + 0.3 * hash3(x, y, z));
         if (d2 > rr * rr) continue;
-        d[o + x] = 0; out.removed++; if (m === ID.GOLD) out.gold++;
+        d[o + x] = 0; out.removed++; if (m === ID.GOLD) out.gold++; if (collect) { out.cidx.push(o + x); out.cmats.push(m); }
         if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; if (y < by0) by0 = y; if (y > by1) by1 = y; if (z < bz0) bz0 = z; if (z > bz1) bz1 = z;
         if (out.samples.length < maxSamples * 4 && hash3(z, x, y + out.removed) < keep) out.samples.push(x, y, z, m);
         if (x > 0) out.seeds.push(o + x - 1); if (x < this.sx - 1) out.seeds.push(o + x + 1);
@@ -125,7 +125,7 @@ export class World {
 
   // Flood from each seed. A piece that reaches bedrock (or anything unbreakable), or is simply huge, stays.
   // Anything else is cut out of the grid and returned as { n, idx: Int32Array, mats: Uint8Array, box }.
-  findIslands(seeds, budget = 150000) {
+  findIslands(seeds, budget = 60000) {
     const d = this.data, sx = this.sx, sz = this.sz, sy = this.sy, sxz = sx * sz, q = this.queue, touched = this.touched;
     const islands = [];
     touched.length = 0;
