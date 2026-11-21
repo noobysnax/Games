@@ -148,8 +148,8 @@ function muzzleWorld(out) {
 
 function blockedNote(mat, tier) {
   const t = MAT[mat].tier;
-  if (t <= tier || performance.now() - W.noteAt < 3500) return;
-  W.noteAt = performance.now();
+  if (t <= tier || performance.now() - W.noteAt < 3500 || (t >= 9 && S.stoneNoted)) return;
+  W.noteAt = performance.now(); if (t >= 9) S.stoneNoted = true;
   hud.toast(t >= 9 ? 'Stone and blast walls cannot be broken' : `${MAT_TOUGH(mat)} needs ${TIER_NEED[t]}`);
 }
 
@@ -833,7 +833,7 @@ function newRun(first) {
   Object.assign(S, { phase: 'break', round: 0, breakT: 4, points: 500, earned: 0, kills: 0, heads: 0, toSpawn: 0, spawnT: 0, slots: [], cur: 0, nades: 0, double: 0, insta: 0,
     opened: new Set(['A']), deepest: 'A', plated: false, coreTaken: false, hurtFlash: 0, deadT: 0, crushCD: 0, best: store.get('best', 0),
     crate: { at: map.crates.findIndex((c) => c.zone === 'A'), state: 'idle', t: 0, uses: 0, pick: null, show: null },
-    seq: 0, log: [], boss: 'dormant', bossRock: null, charged: false, dropId: 0, peers: S.peers || new Map(), wipeT: 0, alive: 1, name: S.name, color: S.color ?? 0 });
+    seq: 0, log: [], stoneNoted: false, boss: 'dormant', bossRock: null, charged: false, dropId: 0, peers: S.peers || new Map(), wipeT: 0, alive: 1, name: S.name, color: S.color ?? 0 });
   Object.assign(W, { flowT: 0, fireT: 0, reloadT: 0, swapT: 0, knifeT: 0, nadeT: 0, aimK: 0, kick: 0, aimToggle: false, noteAt: 0, flashT: 0, beamOn: false, autoReload: 0, target: null, netT: 0, btT: 0 });
   player.reset(); player.maxHp = 100; player.hp = 100;
   give('rook'); W.swapT = 0;

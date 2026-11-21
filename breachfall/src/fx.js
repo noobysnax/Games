@@ -111,9 +111,9 @@ export class Fx {
       this.glow.add(x, y, z, Math.cos(a) * Math.cos(e) * sp, Math.sin(e) * sp + 1.5, Math.sin(a) * Math.cos(e) * sp, r * (0.1 + Math.random() * 0.16), 0.18 + Math.random() * 0.36, -0.25, false, _c, 2.1);
     }
     _c.setHex(0x2c2a2a);
-    for (let i = 0; i < n * 0.7; i++) {
+    for (let i = 0; i < n * 0.45; i++) {
       const a = Math.random() * 6.283, sp = r * (0.4 + Math.random() * 1.6);
-      this.chips.add(x + rnd(r * 0.3), y + rnd(r * 0.3), z + rnd(r * 0.3), Math.cos(a) * sp, 0.8 + Math.random() * 2.4, Math.sin(a) * sp, r * (0.14 + Math.random() * 0.22), 1.2 + Math.random() * 1.8, -0.06, false, _c, 0.6 + Math.random() * 1.6);
+      this.chips.add(x + rnd(r * 0.3), y + rnd(r * 0.3), z + rnd(r * 0.3), Math.cos(a) * sp, 0.8 + Math.random() * 2.4, Math.sin(a) * sp, r * (0.08 + Math.random() * 0.13), 0.9 + Math.random() * 1.3, -0.06, false, _c, 0.6 + Math.random() * 1.6);
     }
   }
   gore(x, y, z, dx, dy, dz, n, mats) {

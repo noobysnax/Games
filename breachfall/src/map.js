@@ -277,8 +277,9 @@ export function buildMap(w) {
   // arena clutter: wrecked machinery, drums, a collapsed rack
   for (const [x, z] of [[14, 35], [33.5, 45], [20.5, 45.6], [27, 34.4]]) { ub(x, 0, z, x + 1.4, 1.2, z + 0.9, RUST); ub(x + 0.2, 1.2, z + 0.1, x + 1.0, 1.5, z + 0.7, BLK2); }
   for (const [x, z] of [[15.5, 45.4], [16.3, 45.6], [35.4, 34.6], [26, 46]]) { w.fill(v(x - 0.3), UFY, v(z - 0.3), v(x + 0.3), UFY + v(0.95), v(z + 0.3), RUST); }
-  for (const [x, z] of [[15, 40], [21, 40], [27, 40], [33, 40], [24, 35], [24, 45], [44.7, 45]]) lamp(x, H - 0.13, z, 0xff6040, 1.4, 3, UFY, RED_LAMP);
-  for (const [x, z] of [[38.5, 36], [41, 41.5]]) lamp(x, H - 0.13, z, 0xb080ff, 1.4, 3, UFY, LAMP);
+  for (const [x, z] of [[15, 40], [21, 40], [27, 40], [33, 40], [44.7, 45], [40, 45]]) lamp(x, H - 0.13, z, 0xffc890, 1.5, 3, UFY, LAMP);
+  for (const [x, z] of [[18, 34.2], [30, 45.8], [13, 40]]) lamp(x, H - 0.13, z, 0xff5030, 0.5, 2, UFY, RED_LAMP);
+  for (const [x, z] of [[38.5, 36], [41, 41.5]]) lamp(x, H - 0.13, z, 0xc8a8ff, 2.0, 3, UFY, LAMP);
 
   w.dirtyChunks.clear(); w.dirtyBox = null;
 

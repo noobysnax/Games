@@ -23,7 +23,7 @@ export class Net {
     if (window.Peer) return;
     await new Promise((res, rej) => {
       const s = document.createElement('script'); s.src = PEER_URL; s.async = true;
-      s.onload = res; s.onerror = () => rej(new Error('The co-op library could not be downloaded. Check your connection.'));
+      s.onload = res; s.onerror = () => rej(new Error('The co-op library could not be downloaded. Check your connection.' + HINT));
       document.head.appendChild(s);
     });
   }
@@ -35,7 +35,7 @@ export class Net {
   open(id) {
     return new Promise((res, rej) => {
       const p = id ? new window.Peer(id, this.options()) : new window.Peer(this.options());
-      const t = setTimeout(() => rej(new Error('The co-op server did not answer. Try again in a moment.')), 12000);
+      const t = setTimeout(() => rej(new Error('The co-op server did not answer. Try again in a moment.' + HINT)), 12000);
       p.on('open', () => { clearTimeout(t); this.peer = p; res(p); });
       p.on('error', (e) => { if (!this.peer) { clearTimeout(t); p.destroy(); rej(e); } else if (e.type === 'peer-unavailable') this.onDrop?.('No game is running with that code.'); });
       p.on('disconnected', () => { if (this.peer === p && !p.destroyed) p.reconnect(); });
@@ -90,9 +90,11 @@ export class Net {
   }
 }
 
+const EMBEDDED = (() => { try { return window.top !== window; } catch { return true; } })();
+const HINT = EMBEDDED ? ' If you are playing inside a preview window, co-op is blocked there: open the hosted copy of the game instead.' : '';
 function friendly(e) {
   const t = e && e.type;
   if (t === 'browser-incompatible') return new Error('This browser cannot make direct connections, so co-op is unavailable here.');
-  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return new Error('Could not reach the co-op server. Check your connection and try again.');
+  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return new Error('Could not reach the co-op server. Check your connection and try again.' + HINT);
   return e instanceof Error ? e : new Error(String(e && e.message || e));
 }
